@@ -1,0 +1,46 @@
+{% load static %}
+{% load render_table from django_tables2 %}
+
+<h1>Execute concurrent transactions</h1>
+
+<script type="text/javascript" src="{% static 'js/jquery-3.2.1.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax-plugin.min.js' %}"></script>
+
+<script type="text/javascript">
+     function rewriteTable(content) {
+         $( "#resultTable" ).html( content );
+     }
+ </script>
+
+<form action="{% url 'transactions:run' %}" method="post" data-ajax-submit="true" data-success="rewriteTable">
+{% csrf_token %}
+<input type="submit" value="Run" /><br />
+<label>Isolation level: </label><br />
+<select name="isolation_level">
+  <option value="READ UNCOMMITTED">READ UNCOMMITTED</option>
+  <option value="READ COMMITTED">READ COMMITTED</option>
+  <option selected value="REPEATABLE READ">REPEATABLE READ</option>
+  <option value="SERIALIZABLE">SERIALIZABLE</option>
+</select><br/>
+<div style="display: inline-block;">
+	<div id="result" style="float:left;">
+	<label>Data: </label><br />
+	<div id="resultTable">{% render_table users %}</div>
+	</div>
+	<div id="first" style="float:left;">
+	<label>Input 1st transaction:</label><br />
+	<textarea name="sql1" cols="40" rows="50">
+SELECT SLEEP(2);
+DELETE FROM transactions_user WHERE name="petya";
+INSERT INTO transactions_user (name, score) VALUES ("petya2", 2)
+	</textarea>
+	</div>
+	<div id="second" style="float:right;">
+	<label>Input 2nd transaction:</label><br />
+	<textarea name="sql2" cols="40" rows="50">
+INSERT INTO transactions_user (name, score) VALUES ("petya", 2)
+	</textarea>
+	</div>
+</div>
+</form>
